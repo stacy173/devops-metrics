@@ -22,8 +22,8 @@ store them in PostgreSQL.
 - GitHub Actions runs checks and builds a container image; GHCR stores the image.
 - Kubernetes, Helm, and Argo CD will be used later to deploy the service locally.
 
-The service's `/metrics` endpoint will report how the service is operating. It
-will not be presented as the source of computer CPU or memory measurements.
+The collector sends computer CPU and memory readings to the API through /measurements. 
+A separate /metrics endpoint will later expose API performance data for Prometheus.
 
 | Method | Path | Purpose |
 |---|---|---|
