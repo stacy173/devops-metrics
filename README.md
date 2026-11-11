@@ -2,11 +2,11 @@
 
 A hands-on DevOps learning project for collecting computer performance measurements and practicing how to build, package, deploy, and monitor a Python service.
 
-**Status:** Early API prototype. The FastAPI endpoints are implemented; measurements are currently held in memory. The collector, PostgreSQL persistence, and deployment pipeline are planned.
+**Status:** Early prototype. The FastAPI API and a one-shot host metrics collector are implemented. Measurements are currently held in API memory and are lost when the API restarts. PostgreSQL persistence and the deployment pipeline are planned.
 
 ## Project purpose
 
-This project is a practical way to refresh Python and infrastructure skills while learning a modern DevOps workflow. A Python collector will read CPU and memory measurements from the computer where it runs and send them to the API. The API will validate and store those readings so they can be retrieved later.
+This project is a practical way to refresh Python and infrastructure skills while learning a modern DevOps workflow. The collector reads CPU and memory usage from the computer where it runs and submits a measurement to the FastAPI service. The API validates the reading and temporarily stores it so it can be retrieved.
 
 ## Current API
 
@@ -18,18 +18,6 @@ This project is a practical way to refresh Python and infrastructure skills whil
 | `GET` | `/measurements` | List measurements received since the API started. |
 
 The API documentation is available at `/docs` while the service is running.
-
-Example request body for `POST /measurements`:
-
-```json
-{
-  "host_id": "my-pc",
-  "cpu_percent": 23.5,
-  "memory_percent": 61.2
-}
-```
-
-`collected_at` is optional; when omitted, the API records the current UTC time.
 
 ## Run locally
 
@@ -43,25 +31,46 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
-On Linux or macOS, activate it with:
+On Linux or macOS, activate the environment with:
 
 ```sh
 source .venv/bin/activate
 ```
 
-Start the API from the repository root:
+Start the API in one terminal:
 
 ```sh
 python -m uvicorn app.main:app --reload
 ```
 
-Open <http://localhost:8000/docs> to try the endpoints. Measurements are currently stored in memory and are lost when the API process stops or restarts.
+In a second terminal, activate the same virtual environment and run the collector once:
+
+```sh
+python -m collector.main
+```
+
+The collector measures the operating system where it runs. For this local setup, run both processes on the same computer so the default API URL, `http://127.0.0.1:8000/measurements`, works. If the API is listening at another address, set `API_URL` before running the collector.
+
+For PowerShell:
+
+```powershell
+$env:API_URL = "http://127.0.0.1:8000/measurements"
+python -m collector.main
+```
+
+For Linux or macOS:
+
+```sh
+export API_URL="http://127.0.0.1:8000/measurements"
+python -m collector.main
+```
+
+A successful run prints the API response, including the generated measurement ID. Open <http://localhost:8000/docs>, run `GET /measurements`, and confirm the new measurement appears. The in-memory list clears when the API process restarts.
 
 ## Planned architecture
 
-- A Python collector reads CPU and memory measurements from its host and submits them to the FastAPI service.
-- The API will store submitted measurements in PostgreSQL.
-- A separate `/metrics` endpoint will later expose API telemetry, such as request counts and errors, for Prometheus to scrape. It is not implemented yet and will not be the source of host CPU or memory readings.
+- The API will store submitted measurements in PostgreSQL instead of process memory.
+- A separate `/metrics` endpoint will expose API telemetry, such as request counts and errors, for Prometheus to scrape. It is not implemented yet and will not be the source of host CPU or memory readings.
 - Docker Compose will run the API and database locally.
 - GitHub Actions will run checks and build a container image; GHCR will store the image.
 - Kubernetes, Helm, and Argo CD will be used later to deploy the service locally.
