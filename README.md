@@ -25,6 +25,12 @@ store them in PostgreSQL.
 The service's `/metrics` endpoint will report how the service is operating. It
 will not be presented as the source of computer CPU or memory measurements.
 
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/health` | Check that the API process is running. |
+| `GET` | `/ready` | Check whether the API is ready to serve requests. |
+| `POST` | `/measurements` | Submit a CPU and memory measurement. |
+| `GET` | `/measurements` | Retrieve submitted measurements. |
 
 ## Planned tools
 
